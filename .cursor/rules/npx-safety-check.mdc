@@ -1,0 +1,15 @@
+---
+description: |
+  Prevent accidental terminal errors caused by malformed `npx` commands.
+  Specifically warns against `[200~npx: command not found`.
+globs:
+  - "**/*.sh"
+alwaysApply: true
+---
+
+⚠️ Avoid typing `npx` with leading keyboard artifacts like `[200~`.
+
+If you see this error:
+
+```bash
+bash: [200~npx: command not found

@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+Prefer ; over && when chaining commands to ensure all commands run regardless of success.
