@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// Mock user ID - à remplacer par l'authentification réelle
-const MOCK_USER_ID = 'user1';
+async function getUserId() {
+  const session = await getServerSession(authOptions);
+  return session?.user?.id;
+}
 
 export async function GET() {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    // Pour le moment, on utilise un ID utilisateur mock
-    // En production, récupérer l'ID depuis la session
     const favorites = await prisma.favorite.findMany({
-      where: { userId: MOCK_USER_ID },
+      where: { userId },
       include: {
         product: {
           include: {
@@ -32,6 +39,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { productId } = await request.json();
 
@@ -42,60 +54,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier si le produit existe
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    // Vérifier si le favori existe déjà
     const existingFavorite = await prisma.favorite.findUnique({
       where: {
         userId_productId: {
-          userId: MOCK_USER_ID,
-          productId: productId,
+          userId,
+          productId,
         },
       },
     });
 
     if (existingFavorite) {
-      // Supprimer le favori s'il existe déjà
       await prisma.favorite.delete({
         where: { id: existingFavorite.id },
       });
-
-      return NextResponse.json({ 
-        message: 'Favorite removed',
-        isFavorite: false 
-      });
+      return NextResponse.json({ message: 'Favorite removed' });
     } else {
-      // Ajouter le favori s'il n'existe pas
       const favorite = await prisma.favorite.create({
         data: {
-          userId: MOCK_USER_ID,
-          productId: productId,
-        },
-        include: {
-          product: {
-            include: {
-              brand: true,
-              category: true,
-            }
-          }
+          userId,
+          productId,
         },
       });
-
-      return NextResponse.json({ 
-        message: 'Favorite added',
-        favorite,
-        isFavorite: true 
-      });
+      return NextResponse.json({ message: 'Favorite added', favorite });
     }
   } catch (error) {
     console.error('Error managing favorite:', error);

@@ -1,5 +1,7 @@
 import useSWR from 'swr';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface Favorite {
   id: string;
@@ -12,17 +14,29 @@ interface FavoritesResponse {
   favorites: Favorite[];
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (res.status === 401) {
+    return { favorites: [] }; // Retourner un tableau vide pour les non-connectés
+  }
+  return res.json();
+});
 
 export function useFavorites() {
+  const { status } = useSession();
+  const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
   
   const { data, error, isLoading, mutate } = useSWR<FavoritesResponse>(
-    '/api/favorites',
+    status === 'authenticated' ? '/api/favorites' : null, // Ne fetch que si authentifié
     fetcher
   );
 
   const toggleFavorite = async (productId: string) => {
+    if (status !== 'authenticated') {
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
     setIsToggling(true);
     try {
       const response = await fetch('/api/favorites', {
@@ -36,11 +50,10 @@ export function useFavorites() {
       if (!response.ok) {
         throw new Error('Failed to toggle favorite');
       }
-
-      // Optimistically update the cache
       await mutate();
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      // On pourrait vouloir afficher une notification à l'utilisateur ici
     } finally {
       setIsToggling(false);
     }
@@ -48,10 +61,11 @@ export function useFavorites() {
 
   return {
     favorites: data?.favorites || [],
-    isLoading,
+    isLoading: status === 'loading' || isLoading,
     isError: error,
     toggleFavorite,
     isToggling,
     mutate,
+    isAuthenticated: status === 'authenticated',
   };
 } 
