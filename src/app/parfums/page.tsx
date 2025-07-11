@@ -121,7 +121,7 @@ export default function ParfumsPage() {
       </div>
 
       <div className="grid lg:grid-cols-4 gap-8">
-        <aside className="hidden lg:block lg:col-span-1 sticky top-20 self-start h-[calc(100vh-6rem)]">
+        <aside className="hidden lg:block lg:col-span-1">
           <FilterSidebar {...sidebarProps} />
         </aside>
 
