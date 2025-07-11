@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, Grid, List, Loader2 } from "lucide-react";
+import { Grid, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/products/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import { useBrands, useCategories } from "@/hooks/useBrandsAndCategories";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Product as PrismaProduct, Brand, Category } from "@/generated/prisma";
 import FilterSidebar from "@/components/products/FilterSidebar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import MobileFilters from "@/components/products/MobileFilters";
 
 // Étendre le type Product pour inclure les relations
 type ProductWithRelations = PrismaProduct & {
@@ -97,6 +96,11 @@ export default function ParfumsPage() {
     setPage(1);
   }
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo(0, 0);
+  };
+
   const sidebarProps = {
     brands,
     categories,
@@ -126,8 +130,13 @@ export default function ParfumsPage() {
         </aside>
 
         <main className="lg:col-span-3">
-          <div className="mb-6">
+          <div className="lg:hidden">
+            <MobileFilters {...sidebarProps} />
+          </div>
+
+          <div className="mb-6 hidden lg:block">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+
               <div className="flex-1">
                 <Input
                   placeholder="Rechercher un parfum, une marque..."
@@ -138,19 +147,7 @@ export default function ParfumsPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" className="lg:hidden">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filtres
-                      {hasActiveFilters && <Badge variant="secondary" className="ml-2">Actifs</Badge>}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80">
-                    <FilterSidebar {...sidebarProps} />
-                  </SheetContent>
-                </Sheet>
-
+                
                 <select
                   value={`${sortBy}-${sortOrder}`}
                   onChange={(e) => {
@@ -179,6 +176,31 @@ export default function ParfumsPage() {
               </div>
             </div>
           </div>
+
+          <div className="flex items-center justify-between lg:hidden mb-4">
+            <Input
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [newSortBy, newSortOrder] = e.target.value.split('-') as [SortOption, SortOrder];
+                setSortBy(newSortBy);
+                setSortOrder(newSortOrder);
+              }}
+              className="px-3 py-2 border rounded-md text-sm bg-background"
+            >
+              <option value="createdAt-desc">Plus récents</option>
+              <option value="createdAt-asc">Plus anciens</option>
+              <option value="name-asc">Nom A-Z</option>
+              <option value="name-desc">Nom Z-A</option>
+              <option value="price-asc">Prix croissant</option>
+              <option value="price-desc">Prix décroissant</option>
+            </select>
+          </div>
           
           {isLoading && !products.length ? (
             <div className="flex justify-center items-center py-16">
@@ -200,8 +222,24 @@ export default function ParfumsPage() {
                   />
                 ))}
               </div>
-              <div className="mt-8 flex justify-center">
-                {/* Pagination Controls */}
+              <div className="mt-8 flex justify-center items-center gap-4">
+                <Button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={!pagination?.hasPrev}
+                  variant="outline"
+                >
+                  Précédent
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {pagination?.page} sur {pagination?.totalPages}
+                </span>
+                <Button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!pagination?.hasNext}
+                  variant="outline"
+                >
+                  Suivant
+                </Button>
               </div>
             </>
           ) : (
