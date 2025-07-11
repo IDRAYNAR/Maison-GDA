@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, X, Share2, ShoppingBag } from "lucide-react";
+import { Heart, X, Share2, ShoppingBag, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +12,10 @@ const mockFavorites = [
   {
     id: "1",
     name: "Santal 33",
-    brand: "Le Labo",
+    brand: { name: "Le Labo" },
     price: 182,
     originalPrice: 210,
-    image: "/api/placeholder/300/300",
+    images: ["/api/placeholder/300/300"],
     slug: "santal-33",
     concentration: "EDP",
     volume: 50,
@@ -27,9 +27,9 @@ const mockFavorites = [
   {
     id: "2", 
     name: "Black Opium",
-    brand: "Yves Saint Laurent",
+    brand: { name: "Yves Saint Laurent" },
     price: 95,
-    image: "/api/placeholder/300/300",
+    images: ["/api/placeholder/300/300"],
     slug: "black-opium",
     concentration: "EDP",
     volume: 50,
@@ -41,9 +41,9 @@ const mockFavorites = [
   {
     id: "3",
     name: "Terre d'Hermès",
-    brand: "Hermès",
+    brand: { name: "Hermès" },
     price: 125,
-    image: "/api/placeholder/300/300",
+    images: ["/api/placeholder/300/300"],
     slug: "terre-d-hermes",
     concentration: "EDT",
     volume: 100,
@@ -194,10 +194,10 @@ export default function FavorisPage() {
             Explorez notre collection et ajoutez vos parfums préférés en cliquant sur le cœur
           </p>
           <Button asChild>
-            <a href="/parfums">
+            <Link href="/parfums">
               <ShoppingBag className="h-4 w-4 mr-2" />
               Découvrir nos parfums
-            </a>
+            </Link>
           </Button>
         </div>
       ) : (

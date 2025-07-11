@@ -5,10 +5,10 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 interface ProductsParams {
   page?: number;
   limit?: number;
-  gender?: string;
-  concentration?: string;
-  brandId?: string;
-  categoryId?: string;
+  gender?: string | string[];
+  concentration?: string | string[];
+  brandId?: string | string[];
+  categoryId?: string | string[];
   featured?: boolean;
   inStock?: boolean;
   search?: string;
@@ -18,15 +18,21 @@ interface ProductsParams {
 
 export function useProducts(params: ProductsParams = {}) {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
-      searchParams.append(key, value.toString());
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          if(item) searchParams.append(key, item);
+        });
+      } else {
+        searchParams.append(key, value.toString());
+      }
     }
   });
 
   const url = `/api/products?${searchParams.toString()}`;
-  
+
   const { data, error, isLoading, mutate } = useSWR(url, fetcher);
 
   return {

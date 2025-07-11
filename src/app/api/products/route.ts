@@ -7,10 +7,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
-    const gender = searchParams.get('gender');
-    const concentration = searchParams.get('concentration');
-    const brandId = searchParams.get('brandId');
-    const categoryId = searchParams.get('categoryId');
+    const genders = searchParams.getAll('gender');
+    const concentrations = searchParams.getAll('concentration');
+    const brandIds = searchParams.getAll('brandId');
+    const categoryIds = searchParams.getAll('categoryId');
     const featured = searchParams.get('featured') === 'true';
     const inStock = searchParams.get('inStock') === 'true';
     const search = searchParams.get('search');
@@ -22,20 +22,20 @@ export async function GET(request: NextRequest) {
     // Construire les filtres
     const where: Prisma.ProductWhereInput = {};
 
-    if (gender) {
-      where.gender = gender as Gender;
+    if (genders.length > 0) {
+      where.gender = { in: genders as Gender[] };
     }
 
-    if (concentration) {
-      where.concentration = concentration;
+    if (concentrations.length > 0) {
+      where.concentration = { in: concentrations };
     }
 
-    if (brandId) {
-      where.brandId = brandId;
+    if (brandIds.length > 0) {
+      where.brandId = { in: brandIds };
     }
 
-    if (categoryId) {
-      where.categoryId = categoryId;
+    if (categoryIds.length > 0) {
+      where.categoryId = { in: categoryIds };
     }
 
     if (featured) {

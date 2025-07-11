@@ -11,18 +11,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 interface ProductCardProps {
   id: string;
   name: string;
-  brand: string;
+  brand: { name: string };
   price: number;
-  originalPrice?: number;
-  image: string;
+  originalPrice?: number | null;
+  images: string[];
   slug: string;
-  concentration?: string;
-  volume?: number;
+  concentration?: string | null;
+  volume?: number | null;
   gender: 'HOMME' | 'FEMME' | 'UNISEX';
   featured?: boolean;
   inStock?: boolean;
   isFavorite?: boolean;
-  onToggleFavorite?: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+  viewMode?: 'grid' | 'list';
 }
 
 export default function ProductCard({
@@ -31,7 +32,7 @@ export default function ProductCard({
   brand,
   price,
   originalPrice,
-  image,
+  images,
   slug,
   concentration,
   volume,
@@ -39,7 +40,8 @@ export default function ProductCard({
   featured = false,
   inStock = true,
   isFavorite = false,
-  onToggleFavorite
+  onToggleFavorite,
+  viewMode = 'grid'
 }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,7 +68,62 @@ export default function ProductCard({
   };
 
   const hasDiscount = originalPrice && originalPrice > price;
+  const image = images && images.length > 0 ? images[0] : '/api/placeholder/400/400';
 
+  if (viewMode === 'list') {
+    return (
+      <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-row">
+        <div className="relative aspect-square overflow-hidden w-40 flex-shrink-0">
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="200px"
+          />
+        </div>
+        <div className="p-4 flex flex-col justify-between flex-grow">
+          <div>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">{brand.name}</p>
+                <Link href={`/parfums/${slug}`}>
+                  <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors">
+                    {name}
+                  </h3>
+                </Link>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+                onClick={handleToggleFavorite}
+                disabled={isLoading}
+              >
+                <Heart className={`h-4 w-4 transition-colors ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+              <Badge variant="outline" className={`text-xs ${getGenderColor(gender)}`}>
+                {gender === 'UNISEX' ? 'Mixte' : gender.charAt(0) + gender.slice(1).toLowerCase()}
+              </Badge>
+              {concentration && <span>{concentration}</span>}
+              {volume && <span>{volume}ml</span>}
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xl text-primary">{price}€</span>
+              {hasDiscount && <span className="text-sm text-muted-foreground line-through">{originalPrice}€</span>}
+            </div>
+            {/* On pourrait ajouter un bouton "Voir détails" ici */}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Vue grille (code existant, légèrement adapté)
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="p-0 relative">
@@ -120,7 +177,7 @@ export default function ProductCard({
       <CardContent className="p-4">
         <div className="space-y-2">
           {/* Brand */}
-          <p className="text-sm font-medium text-muted-foreground">{brand}</p>
+          <p className="text-sm font-medium text-muted-foreground">{brand.name}</p>
           
           {/* Name */}
           <Link href={`/parfums/${slug}`}>
